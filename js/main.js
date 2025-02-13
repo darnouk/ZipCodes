@@ -90,3 +90,16 @@ legend.onAdd = function (map) {
 };
 
 legend.addTo(map);
+
+// Show welcome popup on page load
+document.addEventListener("DOMContentLoaded", function () {
+    let popup = document.getElementById("welcome-popup");
+    let closeBtn = document.getElementById("close-popup");
+
+    closeBtn.addEventListener("click", function () {
+        popup.style.display = "none";
+    });
+
+    // Show popup initially
+    popup.style.display = "flex";
+});
