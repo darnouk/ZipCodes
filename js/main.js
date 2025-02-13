@@ -8,21 +8,39 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-// Load both datasets before applying styling
-let priceMap = {};  // Stores ZIP-to-price mapping
-let geojsonLoaded = false;
-let csvLoaded = false;
 
-// Function to apply home price data once both datasets are ready
-function applyPriceData() {
-    if (!geojsonLoaded || !csvLoaded) return; // Wait until both are ready
 
-    wiZipCodes.eachLayer(function(layer) {
-        let zip = layer.feature.properties.ZCTA5CE10;
-        if (zip in priceMap) {
-            layer.feature.properties.median_price = priceMap[zip];
-            layer.setStyle(styleZipCodes(layer.feature));
-        }
+// Function to get color based on home price
+function getColor(price) {
+    return price > 600000 ? '#66000D' : // very dark red
+           price > 500000 ? '#800026' : // dark red
+           price > 400000 ? '#BD0026' : // red
+           price > 300000 ? '#E31A1C' : // light red
+           price > 250000 ? '#FC4E2A' : // orange-red
+           price > 150000 ? '#FD8D3C' : // orange
+           price > 75000  ? '#FED976' : // yellow-orange
+           price > 1      ? '#FFEDA0' : // vanilla
+                            '#D3D3D3'; // light gray for no data 
+}
+
+
+// Function to style zip code polygons
+function styleZipCodes(feature) {
+    return {
+        color: "black",
+        weight: 1,
+        fillColor: getColor(feature.properties.median_price || 0), 
+        fillOpacity: 0.7
+    };
+}
+
+// Function to handle click event and show popups
+function onEachFeature(feature, layer) {
+    layer.on("click", function () {
+        let zip = feature.properties.ZCTA5CE10 || "Unknown"; //field name is weird (ZCTA5CE10)
+        let price = feature.properties.median_price ? `$${feature.properties.median_price.toLocaleString()}` : "No Data";
+
+        layer.bindPopup(`<b>ZIP Code:</b> ${zip}<br><b>Median Home Price:</b> ${price}`).openPopup();
     });
 }
 
@@ -30,24 +48,27 @@ function applyPriceData() {
 var wiZipCodes = new L.GeoJSON.AJAX("data/wi_zipcodes.geojson", {
     style: styleZipCodes,
     onEachFeature: onEachFeature
-});
+}).addTo(map);
 
-// Mark GeoJSON as loaded and try to apply data
-wiZipCodes.on('data:loaded', function() {
-    geojsonLoaded = true;
-    applyPriceData();
-});
-
-// Load CSV housing data and store in priceMap
+// Load CSV housing data and match with ZIP codes
 d3.csv("data/SFR.csv").then(function(data) {
+    let priceMap = {};
+    
     data.forEach(row => {
         let zip = row["ZIP"];
         let price = +row["SFR"];
         priceMap[zip] = price;
     });
 
-    csvLoaded = true;
-    applyPriceData();
+    wiZipCodes.on('data:loaded', function() {
+        wiZipCodes.eachLayer(function(layer) {
+            let zip = layer.feature.properties.ZCTA5CE10;
+            if (zip in priceMap) {
+                layer.feature.properties.median_price = priceMap[zip];
+                layer.setStyle(styleZipCodes(layer.feature));
+            }
+        });
+    });
 });
 
 // LEGEND
