@@ -8,8 +8,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-
-
 // Function to get color based on home price
 function getColor(price) {
     return price > 600000 ? '#66000D' : // very dark red
@@ -23,8 +21,7 @@ function getColor(price) {
                             '#D3D3D3'; // light gray for no data 
 }
 
-
-// Function to style zip code polygons
+// Function to style ZIP code polygons
 function styleZipCodes(feature) {
     return {
         color: "black",
@@ -37,42 +34,48 @@ function styleZipCodes(feature) {
 // Function to handle click event and show popups
 function onEachFeature(feature, layer) {
     layer.on("click", function () {
-        let zip = feature.properties.ZCTA5CE10 || "Unknown"; //field name is weird (ZCTA5CE10)
+        let zip = feature.properties.ZCTA5CE10 || feature.properties.ZCTA5CE20 || "Unknown"; 
         let price = feature.properties.median_price ? `$${feature.properties.median_price.toLocaleString()}` : "No Data";
 
         layer.bindPopup(`<b>ZIP Code:</b> ${zip}<br><b>Median Home Price:</b> ${price}`).openPopup();
     });
 }
 
-// Load Wisconsin zip codes GeoJSON
-var wiZipCodes = new L.GeoJSON.AJAX("data/wi_zipcodes.geojson", {
-    style: styleZipCodes,
-    onEachFeature: onEachFeature
-}).addTo(map);
+// Function to load ZIP code data for a state
+function loadZipCodeData(geojsonPath, csvPath, zipField) {
+    let stateLayer = new L.GeoJSON.AJAX(geojsonPath, {
+        style: styleZipCodes,
+        onEachFeature: onEachFeature
+    }).addTo(map);
 
-// Load CSV housing data and match with ZIP codes
-d3.csv("data/SFR.csv").then(function(data) {
-    let priceMap = {};
-    
-    data.forEach(row => {
-        let zip = row["ZIP"];
-        let price = +row["SFR"];
-        priceMap[zip] = price;
-    });
+    let priceMap = {}; // Store ZIP-to-price mapping
 
-    wiZipCodes.on('data:loaded', function() {
-        setTimeout(() => { // Small delay to ensure CSV is loaded
-            wiZipCodes.eachLayer(function(layer) {
-                let zip = layer.feature.properties.ZCTA5CE10;
-                if (zip in priceMap) {
-                    layer.feature.properties.median_price = priceMap[zip];
-                    layer.setStyle(styleZipCodes(layer.feature));
-                }
-            });
-        }, 100); // 100ms delay ensures proper data sync
+    d3.csv(csvPath).then(function(data) {
+        data.forEach(row => {
+            let zip = row["ZIP"];
+            let price = +row["SFR"];
+            priceMap[zip] = price;
+        });
+
+        stateLayer.on('data:loaded', function() {
+            setTimeout(() => { // Small delay to ensure CSV is loaded
+                stateLayer.eachLayer(function(layer) {
+                    let zip = layer.feature.properties[zipField]; // Use dynamic ZIP field
+                    if (zip in priceMap) {
+                        layer.feature.properties.median_price = priceMap[zip];
+                        layer.setStyle(styleZipCodes(layer.feature));
+                    }
+                });
+            }, 100); // 100ms delay ensures proper data sync
+        });
     });
-    
-});
+}
+
+// Load Wisconsin data (ZIP field: ZCTA5CE10)
+loadZipCodeData("data/wi_zipcodes.geojson", "data/SFR.csv", "ZCTA5CE10");
+
+// Load Vermont data (ZIP field: ZCTA5CE20)
+loadZipCodeData("data/vt_zipcodes.geojson", "data/SFR_and_Condo_VT.csv", "ZCTA5CE20");
 
 // LEGEND
 var legend = L.control({ position: "bottomright" });
