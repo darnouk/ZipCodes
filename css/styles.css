@@ -1,3 +1,4 @@
+/* General page styling */
 body, html {
     margin: 0;
     padding: 0;
@@ -5,6 +6,7 @@ body, html {
     font-family: Arial, sans-serif;
 }
 
+/* Header styling (fixed at the top) */
 #header {
     background-color: #333;
     color: white;
@@ -18,22 +20,47 @@ body, html {
     z-index: 1000;
 }
 
+/* Adjust header for smaller screens */
+@media (max-width: 600px) {
+    #header {
+        font-size: 16px;
+        padding: 5px;
+    }
+}
+
+/* Map container styling */
 #map {
-    height: calc(100vh - 50px);
-    width: 100%;
+    height: calc(100vh - 50px); /* Full height minus header */
+    width: 100vw;
+    max-width: 100vw; /* Prevent overflow */
     position: relative;
     top: 50px;
+    overflow: hidden; /* Prevent unwanted scrolling */
 }
 
 /* Legend styling */
 .legend {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
     padding: 10px;
     font-size: 14px;
     border-radius: 5px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+    max-width: 180px;
 }
 
+/* Adjust legend for smaller screens */
+@media (max-width: 600px) {
+    .legend {
+        position: absolute;
+        top: 60px;
+        left: 10px;
+        width: auto;
+        font-size: 12px;
+        padding: 5px;
+    }
+}
+
+/* Legend color boxes */
 .legend i {
     width: 20px;
     height: 20px;
@@ -42,8 +69,29 @@ body, html {
     border-radius: 3px;
 }
 
+/* Reduce icon size on smaller screens */
+@media (max-width: 600px) {
+    .legend i {
+        width: 12px;
+        height: 12px;
+    }
+}
+
 /* Hover effect for ZIP codes */
 .leaflet-interactive:hover {
     opacity: 0.8;
     cursor: pointer;
+}
+
+/* Popup styling for better mobile readability */
+.leaflet-popup-content {
+    font-size: 14px;
+    padding: 5px;
+}
+
+/* Adjust popups for smaller screens */
+@media (max-width: 600px) {
+    .leaflet-popup-content {
+        font-size: 12px;
+    }
 }
