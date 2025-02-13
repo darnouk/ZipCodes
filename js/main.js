@@ -61,14 +61,17 @@ d3.csv("data/SFR.csv").then(function(data) {
     });
 
     wiZipCodes.on('data:loaded', function() {
-        wiZipCodes.eachLayer(function(layer) {
-            let zip = layer.feature.properties.ZCTA5CE10;
-            if (zip in priceMap) {
-                layer.feature.properties.median_price = priceMap[zip];
-                layer.setStyle(styleZipCodes(layer.feature));
-            }
-        });
+        setTimeout(() => { // Small delay to ensure CSV is loaded
+            wiZipCodes.eachLayer(function(layer) {
+                let zip = layer.feature.properties.ZCTA5CE10;
+                if (zip in priceMap) {
+                    layer.feature.properties.median_price = priceMap[zip];
+                    layer.setStyle(styleZipCodes(layer.feature));
+                }
+            });
+        }, 100); // 100ms delay ensures proper data sync
     });
+    
 });
 
 // LEGEND
