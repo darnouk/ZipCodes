@@ -53,7 +53,7 @@ function loadZipCodeData(geojsonPath, csvPath, zipField) {
     d3.csv(csvPath).then(function(data) {
         data.forEach(row => {
             let zip = row["ZIP"];
-            let price = +row["SFR"];
+            let price = +row["Price"];
             priceMap[zip] = price;
         });
 
@@ -72,10 +72,10 @@ function loadZipCodeData(geojsonPath, csvPath, zipField) {
 }
 
 // Load Wisconsin data (ZIP field: ZCTA5CE10)
-loadZipCodeData("data/wi_zipcodes.geojson", "data/SFR.csv", "ZCTA5CE10");
+loadZipCodeData("data/zip_outlines/wisconsin.geojson", "data/csv_data/wisconsin.csv", "ZCTA5CE10");
 
 // Load Vermont data (ZIP field: ZCTA5CE20)
-loadZipCodeData("data/vt_zipcodes.geojson", "data/SFR_and_Condo_VT.csv", "ZCTA5CE20");
+loadZipCodeData("data/zip_outlines/vermont.geojson", "data/csv_data/vermont.csv", "ZCTA5CE20");
 
 // LEGEND
 var legend = L.control({ position: "bottomright" });
